@@ -1,13 +1,30 @@
 <?php
+
+use App\Modules\Authentication\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
 
+Route::prefix('auth')
+    ->name('authentication.')
+    ->group(function (): void {
+        Route::post('/register', [AuthController::class, 'register'])
+            ->name('register');
 
+        Route::post('/login', [AuthController::class, 'login'])
+            ->name('login');
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+        Route::middleware('auth:sanctum')
+            ->group(function (): void {
+                Route::post('/logout', [AuthController::class, 'logout'])
+                    ->name('logout');
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'getUserInfo']);
-});
+                Route::put('/renew-password', [
+                    AuthController::class,
+                    'renewPassword',
+                ])->name('renew-password');
+
+                Route::get('/user-info', [
+                    AuthController::class,
+                    'getUserInfo',
+                ])->name('user-info');
+            });
+    });

@@ -12,7 +12,7 @@ class RegisterTest extends TestCase
 
     public function test_user_can_register(): void
     {
-        $response = $this->postJson('/api/register', [
+        $response = $this->postJson('/api/auth/register', [
             'name' => 'Gamal Sobhy',
             'email' => 'gamal@example.com',
             'password' => 'password123',
@@ -43,7 +43,7 @@ class RegisterTest extends TestCase
 
     public function test_registration_requires_valid_data(): void
     {
-        $response = $this->postJson('/api/register', [
+        $response = $this->postJson('/api/auth/register', [
             'name' => '',
             'email' => 'invalid-email',
             'password' => '123',
@@ -64,7 +64,7 @@ class RegisterTest extends TestCase
             'email' => 'gamal@example.com',
         ]);
 
-        $response = $this->postJson('/api/register', [
+        $response = $this->postJson('/api/auth/register', [
             'name' => 'Another User',
             'email' => 'gamal@example.com',
             'password' => 'password123',

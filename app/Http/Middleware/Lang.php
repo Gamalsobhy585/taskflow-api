@@ -8,16 +8,23 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Lang
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-    public function handle(Request $request, Closure $next): Response
-    {
-        if($request->header("Accept-Language")){
-            app()->setLocale($request->header("Accept-Language"));
-        }
+    private const SUPPORTED_LOCALES = [
+        'en',
+        'ar',
+    ];
+
+    public function handle(
+        Request $request,
+        Closure $next
+    ): Response {
+        $locale = $request->getPreferredLanguage(
+            self::SUPPORTED_LOCALES
+        );
+
+        app()->setLocale(
+            $locale ?: config('app.fallback_locale', 'en')
+        );
+
         return $next($request);
     }
 }

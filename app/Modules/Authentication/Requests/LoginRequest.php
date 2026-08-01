@@ -3,7 +3,6 @@
 namespace App\Modules\Authentication\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\DB;
 
 class LoginRequest extends FormRequest
 {
@@ -27,14 +26,7 @@ class LoginRequest extends FormRequest
          [
             "required",
             "email",
-            function ($attribute, $value, $fail) {
-                $exists = DB::table('users')->where('email', $value)->exists()
-                        || DB::table('dashboard_users')->where('email', $value)->exists();
-
-                if (!$exists) {
-                    $fail(__('messages.login.email_not_found'));
-                }
-            },
+            
         ],
                     "password" => "required|string",
         ];

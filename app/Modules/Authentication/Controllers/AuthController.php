@@ -3,6 +3,7 @@
 namespace App\Modules\Authentication\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\ResponseTrait;
 use App\Modules\Authentication\DTOs\ChangePasswordData;
 use App\Modules\Authentication\DTOs\LoginData;
 use App\Modules\Authentication\DTOs\RegisterUserData;
@@ -11,9 +12,8 @@ use App\Modules\Authentication\Requests\RegisterRequest;
 use App\Modules\Authentication\Requests\UpdatePasswordRequest;
 use App\Modules\Authentication\Resources\UserResource;
 use App\Modules\Authentication\Services\Interface\IAuthService;
-use App\Traits\ResponseTrait;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {

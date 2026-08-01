@@ -33,6 +33,6 @@ class UserRepository implements IUser
 
     public function getUserInfo(User $user): User
     {
-        return $user->loadCount('posts');
+        return $user;
     }
 }

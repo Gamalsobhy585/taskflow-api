@@ -2,99 +2,101 @@
 
 namespace App\Modules\Authentication\Controllers;
 
+use App\Http\Controllers\Controller;
+use App\Modules\Authentication\DTOs\ChangePasswordData;
+use App\Modules\Authentication\DTOs\LoginData;
+use App\Modules\Authentication\DTOs\RegisterUserData;
 use App\Modules\Authentication\Requests\LoginRequest;
 use App\Modules\Authentication\Requests\RegisterRequest;
 use App\Modules\Authentication\Requests\UpdatePasswordRequest;
-use App\Modules\Authentication\Services\Implementations\AuthService;
+use App\Modules\Authentication\Resources\UserResource;
+use App\Modules\Authentication\Services\Interface\IAuthService;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-
+use Illuminate\Http\JsonResponse;
 
 class AuthController extends Controller
 {
     use ResponseTrait;
-    private AuthService $authService;
 
-    public function __construct(AuthService $authService)
-    {
-        $this->authService = $authService;
+    public function __construct(
+        private readonly IAuthService $authService
+    ) {
     }
 
-    public function register(RegisterRequest $request)
-    {
-        try {
-             $this->authService->register($request);
-            return $this->success(
-                __("messages.register.success"),
-                201
-            );
-        }catch (\Exception $e) {
-            $errorMessage = $e->getMessage();
-            $statusCode = $e->getCode() ?: 500;
-            
-            if ($e instanceof \Illuminate\Validation\ValidationException) {
-                $errorMessage = $e->validator->errors()->first();
-                $statusCode = 422;
-            }
-            
-            return $this->returnError($errorMessage, $statusCode);
-        }
+    public function register(
+        RegisterRequest $request
+    ): JsonResponse {
+        $data = RegisterUserData::fromArray(
+            $request->validated()
+        );
+
+        $user = $this->authService->register($data);
+
+        return $this->returnData(
+            __('messages.register.success'),
+            201,
+            new UserResource($user)
+        );
     }
 
-    public function login(LoginRequest $request)
-    {
-        try {
-            $data = $this->authService->login($request);
-            return $this->returnData(
-                __('messages.login.success'),
-                200,
-                $data
-            );
-        } catch (\Exception $e) {
-            $this->returnError($e->getMessage(), $e->getCode() ?: 401);
-        }
-    }
- 
-    public function logout(Request $request)
-    {
-        try {
-            $result = $this->authService->logout($request);
-            if ($result) {
-                return $this->success(__('messages.logout.success'), 200);
-            }
-            $this->returnError(__('messages.logout.failed'), 400);
-        } catch (\Exception $e) {
-            $this->returnError($e->getMessage(), $e->getCode() ?: 500);
-        }
+    public function login(
+        LoginRequest $request
+    ): JsonResponse {
+        $data = LoginData::fromArray(
+            $request->validated()
+        );
+
+        $result = $this->authService->login($data);
+
+        return $this->returnData(
+            __('messages.login.success'),
+            200,
+            $result
+        );
     }
 
-    public function renewPassword(UpdatePasswordRequest $request)
-    {
-        try {
-            $email = $request->user()->email;
-            $this->authService->updateoldPassword(
-                $email,
-                $request->old_password,
-                $request->new_password
-            );
-            return $this->success(__('messages.renew.success'), 200);
-        } catch (\Exception $e) {
-            $this->returnError($e->getMessage(), $e->getCode() ?: 401);
-        }
+    public function logout(
+        Request $request
+    ): JsonResponse {
+        $user = $request->user();
+
+        $this->authService->logout($user);
+
+        return $this->success(
+            __('messages.logout.success'),
+            200
+        );
     }
 
-    public function getUserInfo(Request $request)
-    {
-        try {
-            $user = $this->authService->getUserInfo($request);
-            return $this->returnData(
-                __('messages.user.success'),
-                200,
-                $user
-            );
-        } catch (\Exception $e) {
-            $this->returnError($e->getMessage(), $e->getCode() ?: 404);
-        }
+    public function renewPassword(
+        UpdatePasswordRequest $request
+    ): JsonResponse {
+        $data = ChangePasswordData::fromArray([
+            'email' => $request->user()->email,
+            'old_password' => $request->validated('old_password'),
+            'new_password' => $request->validated('new_password'),
+        ]);
+
+        $this->authService->updateOldPassword($data);
+
+        return $this->success(
+            __('messages.renew.success'),
+            200
+        );
+    }
+
+    public function getUserInfo(
+        Request $request
+    ): JsonResponse {
+        $userResource = $this->authService->getUserInfo(
+            $request->user()
+        );
+
+        return $this->returnData(
+            __('messages.user.success'),
+            200,
+            $userResource
+        );
     }
 }

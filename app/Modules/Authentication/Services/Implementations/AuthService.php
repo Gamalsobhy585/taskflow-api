@@ -2,114 +2,106 @@
 
 namespace App\Modules\Authentication\Services\Implementations;
 
+use App\Models\User;
+use App\Modules\Authentication\DTOs\ChangePasswordData;
+use App\Modules\Authentication\DTOs\LoginData;
+use App\Modules\Authentication\DTOs\RegisterUserData;
+use App\Modules\Authentication\Exceptions\EmailAlreadyExistsException;
+use App\Modules\Authentication\Exceptions\InvalidCredentialsException;
+use App\Modules\Authentication\Exceptions\UserNotFoundException;
 use App\Modules\Authentication\Repositories\Interface\IUser;
 use App\Modules\Authentication\Resources\UserResource;
 use App\Modules\Authentication\Services\Interface\IAuthService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-
-
 
 class AuthService implements IAuthService
 {
-    private IUser $userRepo;
-
-    public function __construct(IUser $user)
-    {
-        $this->userRepo = $user;
+    public function __construct(
+        private readonly IUser $userRepository
+    ) {
     }
 
-    public function register($request)
+    public function register(RegisterUserData $data): User
     {
-        try {
-            if ($this->userRepo->getByEmail($request->email)) {
-                throw new \Exception(__('messages.register.email_exists'), 422);
-            }
-            
-            DB::beginTransaction();
-          
-            $user = [
-                "name" => $request->name,
-                "email" => $request->email,
-                "password" => Hash::make($request->password),
-            ];
-            $storedUser = $this->userRepo->store($user);
-           
-            DB::commit();
-            return $storedUser;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
+        if ($this->userRepository->getByEmail($data->email)) {
+            throw new EmailAlreadyExistsException();
         }
+
+        return DB::transaction(
+            fn (): User => $this->userRepository->store($data)
+        );
     }
 
-    public function login($request)
+    public function login(LoginData $data): array
     {
-        $user = $this->userRepo->getByEmail($request->email);
-        if (!$user) {
-            throw new \Exception(__('messages.login.invalid_credentials'), 401);
+        $user = $this->userRepository->getByEmail($data->email);
+
+        if (
+            !$user ||
+            !Hash::check($data->password, $user->password)
+        ) {
+            throw new InvalidCredentialsException();
         }
 
-        if (!Hash::check($request->password, $user->password)) {
-            throw new \Exception(__('messages.login.invalid_credentials'), 401);
-        }
-
-        $token = $user->createToken('default_token');
-        $user->token = $token->plainTextToken;
+        $token = $user
+            ->createToken('default_token')
+            ->plainTextToken;
 
         return [
-            'token' => $user->token,
+            'token' => $token,
             'user_data' => new UserResource($user),
         ];
     }
 
-    public function logout($request)
+    public function logout(User $user): bool
     {
-        $user = $request->user();
-        if ($user) {
-            $user->currentAccessToken()->delete();
-            return true;
-        }
-        return false;
-    }
+        $accessToken = $user->currentAccessToken();
 
-    public function updateoldPassword($email, $oldPassword, $newPassword)
-    {
-        $user = $this->userRepo->getByEmail($email);
-        if (!$user) {
-            throw new \Exception(__('messages.renew.user_not_found'), 404);
+        if (!$accessToken) {
+            return false;
         }
 
-        if (!Hash::check($oldPassword, $user->password)) {
-            throw new \Exception(__('messages.renew.failed'), 401);
-        }
-
-        $user->password = Hash::make($newPassword);
-        $user->save();
+        $accessToken->delete();
 
         return true;
     }
 
-    public function getUserInfo($request)
-    {
-        try {
-            $user = $this->userRepo->getUserInfo(); 
-            
-            $cacheKey = 'user:info:' . $user->id;
-            
-            return Cache::remember($cacheKey, now()->addHours(1), function() use ($user) {
-                return new UserResource($user);
-            });
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to get user info: ' . $e->getMessage());
-            throw new \Exception(__('messages.user.not_found'), 404);
+    public function updateOldPassword(
+        ChangePasswordData $data
+    ): bool {
+        $user = $this->userRepository->getByEmail($data->email);
+
+        if (!$user) {
+            throw new UserNotFoundException();
         }
+
+        if (!Hash::check($data->oldPassword, $user->password)) {
+            throw new InvalidCredentialsException(
+                __('messages.renew.failed')
+            );
+        }
+
+        return $this->userRepository->updatePassword(
+            $user,
+            $data->newPassword
+        );
     }
 
+    public function getUserInfo(User $user): UserResource
+    {
+        $cacheKey = 'user:info:' . $user->id;
+
+        return Cache::remember(
+            $cacheKey,
+            now()->addHour(),
+            function () use ($user): UserResource {
+                $userInfo = $this->userRepository
+                    ->getUserInfo($user);
+
+                return new UserResource($userInfo);
+            }
+        );
+    }
 }
-
-
-

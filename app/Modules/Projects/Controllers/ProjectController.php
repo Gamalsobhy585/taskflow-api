@@ -27,9 +27,20 @@ class ProjectController extends Controller
 
     public function index(Request $request): ProjectCollection
     {
+        $perPage = min(
+            max((int) $request->integer('per_page', 15), 1),
+            100
+        );
+
+        $page = max(
+            (int) $request->integer('page', 1),
+            1
+        );
+
         $projects = $this->projectService->list(
             user: $request->user(),
-            perPage: (int) $request->integer('per_page', 15)
+            perPage: $perPage,
+            page: $page
         );
 
         return new ProjectCollection($projects);

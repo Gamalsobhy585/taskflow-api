@@ -7,6 +7,8 @@ use App\Modules\Authentication\Repositories\Implementation\UserRepository;
 use App\Modules\Authentication\Repositories\Interface\IUser;
 use App\Modules\Authentication\Services\Implementations\AuthService;
 use App\Modules\Authentication\Services\Interface\IAuthService;
+use App\Modules\Projects\Cache\Implementation\RedisProjectCache;
+use App\Modules\Projects\Cache\Interface\IProjectCache;
 use App\Modules\Projects\Repositories\Implementation\ProjectRepository;
 use App\Modules\Projects\Repositories\Interface\IProjectRepository;
 use App\Modules\Projects\Services\Implementation\ProjectService;
@@ -42,6 +44,11 @@ class AppServiceProvider extends ServiceProvider
             IProjectService::class,
             ProjectService::class
         );
+          $this->app->bind(
+            IProjectCache::class,
+            RedisProjectCache::class
+        );
+        
         
     }
 

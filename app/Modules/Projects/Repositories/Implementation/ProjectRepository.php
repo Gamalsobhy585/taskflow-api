@@ -20,12 +20,18 @@ class ProjectRepository implements IProjectRepository
 
     public function paginateForUser(
         int $userId,
-        int $perPage = 15
+        int $perPage = 15,
+        int $page = 1
     ): LengthAwarePaginator {
         return Project::query()
             ->where('user_id', $userId)
             ->latest('id')
-            ->paginate($perPage);
+            ->paginate(
+                perPage: $perPage,
+                columns: ['*'],
+                pageName: 'page',
+                page: $page
+            );
     }
 
     public function findForUser(

@@ -13,10 +13,11 @@ interface IProjectRepository
         CreateProjectData $data
     ): Project;
 
-    public function paginateForUser(
-        int $userId,
-        int $perPage = 15
-    ): LengthAwarePaginator;
+public function paginateForUser(
+    int $userId,
+    int $perPage = 15,
+    int $page = 1
+): LengthAwarePaginator;
 
     public function findForUser(
         int $projectId,

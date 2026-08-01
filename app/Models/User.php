@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Cache;
-
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -49,15 +50,19 @@ class User extends Authenticatable
 
 
     protected static function booted()
-{
-    static::updated(function ($user) {
-        Cache::forget('user:info:' . $user->id);
-    });
-    
-    static::deleted(function ($user) {
-        Cache::forget('user:info:' . $user->id);
-    });
-}
+    {
+        static::updated(function ($user) {
+            Cache::forget('user:info:' . $user->id);
+        });
+        
+        static::deleted(function ($user) {
+            Cache::forget('user:info:' . $user->id);
+        });
+    }
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
 
     
 }

@@ -7,6 +7,10 @@ use App\Modules\Authentication\Repositories\Implementation\UserRepository;
 use App\Modules\Authentication\Repositories\Interface\IUser;
 use App\Modules\Authentication\Services\Implementations\AuthService;
 use App\Modules\Authentication\Services\Interface\IAuthService;
+use App\Modules\Dashboard\Repositories\Implementation\DashboardRepository;
+use App\Modules\Dashboard\Repositories\Interface\IDashboardRepository;
+use App\Modules\Dashboard\Services\Implementation\DashboardService;
+use App\Modules\Dashboard\Services\Interface\IDashboardService;
 use App\Modules\Projects\Cache\Implementation\RedisProjectCache;
 use App\Modules\Projects\Cache\Interface\IProjectCache;
 use App\Modules\Projects\Repositories\Implementation\ProjectRepository;
@@ -66,6 +70,15 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ITaskCache::class,
             RedisTaskCache::class
+        );
+        $this->app->bind(
+            IDashboardRepository::class,
+            DashboardRepository::class
+        );
+
+        $this->app->bind(
+            IDashboardService::class,
+            DashboardService::class
         );
         
     }

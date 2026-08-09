@@ -423,7 +423,7 @@ php artisan key:generate
 ### 5. Create the Database
 
 ```sql
-CREATE DATABASE electro_pi_assessment
+CREATE DATABASE task_flow_system
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 ```
@@ -470,7 +470,7 @@ php artisan optimize:clear
 ### Application and Database
 
 ```env
-APP_NAME="Electro Pi Assessment"
+APP_NAME="Task Flow System"
 APP_ENV=local
 APP_DEBUG=true
 APP_URL=http://127.0.0.1:8000
@@ -478,7 +478,7 @@ APP_URL=http://127.0.0.1:8000
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=electro_pi_assessment
+DB_DATABASE=task_flow_system
 DB_USERNAME=root
 DB_PASSWORD=
 ```
@@ -793,123 +793,7 @@ Request
 → User Model
 ```
 
-### Register
 
-```http
-POST /api/auth/register
-```
-
-Request:
-
-```json
-{
-  "name": "Gamal Sobhy",
-  "email": "gamal@example.com",
-  "password": "password123",
-  "password_confirmation": "password123"
-}
-```
-
-Successful response:
-
-```http
-201 Created
-```
-
-```json
-{
-  "status": true,
-  "message": "User registered successfully.",
-  "data": {
-    "id": 1,
-    "name": "Gamal Sobhy",
-    "email": "gamal@example.com"
-  }
-}
-```
-
-### Login
-
-```http
-POST /api/auth/login
-```
-
-Request:
-
-```json
-{
-  "email": "gamal@example.com",
-  "password": "password123"
-}
-```
-
-Successful response:
-
-```json
-{
-  "status": true,
-  "message": "Login completed successfully.",
-  "data": {
-    "token": "1|generated-sanctum-token",
-    "user_data": {
-      "id": 1,
-      "name": "Gamal Sobhy",
-      "email": "gamal@example.com"
-    }
-  }
-}
-```
-
-Invalid email and invalid password return the same generic response:
-
-```http
-401 Unauthorized
-```
-
-```json
-{
-  "status": false,
-  "message": "Invalid credentials."
-}
-```
-
-### Logout
-
-```http
-POST /api/auth/logout
-```
-
-No request body is required.
-
-### Renew Password
-
-```http
-PUT /api/auth/renew-password
-```
-
-Request:
-
-```json
-{
-  "old_password": "password123",
-  "new_password": "newPassword123",
-  "new_password_confirmation": "newPassword123"
-}
-```
-
-The user's email is obtained from the authenticated request and must not be accepted from client input.
-
-### User Information
-
-```http
-GET /api/auth/user-info
-```
-
-The result may be cached using a key such as:
-
-```text
-user:info:{user_id}
-```
 
 The cache should be cleared after updating or deleting the user.
 
@@ -952,39 +836,7 @@ ProjectController
 10. Bulk deletion affects only projects owned by the authenticated user.
 11. Missing and unowned projects return `404`.
 
-### Create Project
 
-```http
-POST /api/projects
-```
-
-Example request:
-
-```json
-{
-  "name": "Create Task",
-  "description": "Laravel API task",
-  "status": 1
-}
-```
-
-Example response:
-
-```json
-{
-  "status": true,
-  "message": "Project created successfully.",
-  "data": {
-    "id": 10,
-    "name": "Create Task",
-    "description": "Task System Api",
-    "status": {
-      "value": 1,
-      "label": "Active"
-    }
-  }
-}
-```
 
 The authenticated user ID is assigned server-side and must not be accepted from request input.
 
@@ -1110,120 +962,6 @@ TaskController
 - Redis caches task list and detail reads.
 - Write operations invalidate the owner's task cache.
 
-### Create Task
-
-```http
-POST /api/tasks
-```
-
-Request:
-
-```json
-{
-  "project_id": 1,
-  "title": "Create Tasks Module",
-  "description": "Implement task APIs.",
-  "priority": 3,
-  "status": 1,
-  "due_date": "2026-08-05 18:00:00"
-}
-```
-
-Response:
-
-```json
-{
-  "status": true,
-  "message": "Task created successfully.",
-  "data": {
-    "id": 10,
-    "project": {
-      "id": 1,
-      "name": "Create Task"
-    },
-    "title": "Create Tasks Module",
-    "description": "Implement task APIs.",
-    "priority": {
-      "value": 3,
-      "label": "High"
-    },
-    "status": {
-      "value": 1,
-      "label": "Todo"
-    },
-    "due_date": "2026-08-05T18:00:00.000000Z",
-    "is_overdue": false
-  }
-}
-```
-
-A missing or foreign project returns `404 Not Found`.
-
-### List and Filter Tasks
-
-```http
-GET /api/tasks
-```
-
-Supported query parameters:
-
-| Parameter | Type | Description |
-|---|---|---|
-| `project_id` | integer | Filter by project |
-| `status` | integer | Filter by task status |
-| `priority` | integer | Filter by priority |
-| `search` | string | Search by title |
-| `per_page` | integer | Page size |
-| `page` | integer | Page number |
-
-Examples:
-
-```http
-GET /api/tasks?status=1
-GET /api/tasks?priority=3
-GET /api/tasks?search=assessment
-GET /api/tasks?project_id=5&status=2&priority=3
-```
-
-### Update Task
-
-```http
-PUT /api/tasks/{task}
-```
-
-Request:
-
-```json
-{
-  "title": "Updated Task Title",
-  "description": "Updated description",
-  "priority": 2,
-  "status": 2,
-  "due_date": "2026-08-10 12:00:00"
-}
-```
-
-A successful update resets:
-
-```text
-overdue_notified_at = null
-```
-
-This allows the notification process to evaluate the updated task again.
-
-### Bulk Delete Tasks
-
-```http
-DELETE /api/tasks/bulk-delete
-```
-
-Request:
-
-```json
-{
-  "task_ids": [10, 11, 12]
-}
-```
 
 Only tasks owned through the authenticated user's projects are deleted.
 
@@ -1529,7 +1267,7 @@ php artisan schedule:work
 ### Production Cron
 
 ```cron
-* * * * * cd /path/to/electro-pi-assessment && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /path/to/{project_name) && php artisan schedule:run >> /dev/null 2>&1
 ```
 
 ---
@@ -1842,10 +1580,9 @@ v1.0.0 tag
 
 ## Postman Workspace
 
-The API collection and examples are available in the Electro Pi assessment workspace:
+The API collection and examples are available in the Task Flow workspace:
 
-https://www.postman.com/martian-shadow-736975/workspace/electro-pi-assessment
-
+(https://www.postman.com/martian-shadow-736975/task-flow-api)
 Use it to test:
 
 - Registration and login
@@ -1856,79 +1593,7 @@ Use it to test:
 
 ---
 
-## cURL Examples
 
-### Register
-
-```bash
-curl --request POST \
-  --url http://localhost:8000/api/auth/register \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-    "name": "Gamal Sobhy",
-    "email": "gamal@example.com",
-    "password": "password123",
-    "password_confirmation": "password123"
-  }'
-```
-
-### Login
-
-```bash
-curl --request POST \
-  --url http://localhost:8000/api/auth/login \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-    "email": "gamal@example.com",
-    "password": "password123"
-  }'
-```
-
-### Create Project
-
-```bash
-curl --request POST \
-  --url http://localhost:8000/api/projects \
-  --header 'Accept: application/json' \
-  --header 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
-  --header 'Content-Type: application/json' \
-  --data '{
-    "name": "Electro PI Assessment",
-    "description": "Laravel API technical assessment",
-    "status": 1
-  }'
-```
-
-### Create Task
-
-```bash
-curl --request POST \
-  --url http://localhost:8000/api/tasks \
-  --header 'Accept: application/json' \
-  --header 'Authorization: Bearer YOUR_ACCESS_TOKEN' \
-  --header 'Content-Type: application/json' \
-  --data '{
-    "project_id": 1,
-    "title": "Create Tasks Module",
-    "description": "Implement task APIs.",
-    "priority": 3,
-    "status": 1,
-    "due_date": "2026-08-05 18:00:00"
-  }'
-```
-
-### Get Dashboard Statistics
-
-```bash
-curl --request GET \
-  --url http://localhost:8000/api/dashboard \
-  --header 'Accept: application/json' \
-  --header 'Authorization: Bearer YOUR_ACCESS_TOKEN'
-```
-
----
 
 ## Additional Documentation
 

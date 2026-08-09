@@ -1,6 +1,5 @@
-# Electro Pi Laravel API Assessment
+# Task-Flow Api
 
-A modular Laravel REST API created as a technical assessment for **Electro Pi**.
 
 The project demonstrates a clean, testable backend architecture for managing users, projects, tasks, dashboard statistics, Redis caching, permissions, queues, scheduled jobs, and notifications.
 
@@ -46,7 +45,7 @@ Tasks
 Dashboard
 ```
 
-The assessment demonstrates:
+The System demonstrates:
 
 - Laravel Sanctum API authentication
 - Spatie role and permission authorization
@@ -379,8 +378,8 @@ Recommended local environments include Laragon, Laravel Herd, Docker, or Linux w
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url> electro-pi-assessment
-cd electro-pi-assessment
+git clone <repository-url>
+cd the project
 ```
 
 ### 2. Install PHP Dependencies
@@ -963,8 +962,8 @@ Example request:
 
 ```json
 {
-  "name": "Electro PI Assessment",
-  "description": "Laravel API technical assessment",
+  "name": "Create Task",
+  "description": "Laravel API task",
   "status": 1
 }
 ```
@@ -977,8 +976,8 @@ Example response:
   "message": "Project created successfully.",
   "data": {
     "id": 10,
-    "name": "Electro PI Assessment",
-    "description": "Laravel API technical assessment",
+    "name": "Create Task",
+    "description": "Task System Api",
     "status": {
       "value": 1,
       "label": "Active"
@@ -1140,7 +1139,7 @@ Response:
     "id": 10,
     "project": {
       "id": 1,
-      "name": "Electro PI Assessment"
+      "name": "Create Task"
     },
     "title": "Create Tasks Module",
     "description": "Implement task APIs.",
